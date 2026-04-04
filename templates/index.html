@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>웹 취약점 스캐너</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light pt-5">
+    <div class="container">
+        <h1 class="text-center mb-4">🔍 템플릿 & AI 기반 웹 스캐너</h1>
+
+        <div class="input-group mb-4 w-75 mx-auto">
+            <input type="text" id="targetUrl" class="form-control" placeholder="스캔할 URL 입력 (예: http://demo.testfire.net/search.jsp)">
+            <button class="btn btn-primary" id="scanBtn">스캔 시작</button>
+        </div>
+
+        <div id="loading" class="text-center text-primary fw-bold" style="display: none;">
+            <div class="spinner-border spinner-border-sm"></div> 스캔 진행 중... (최대 1분 정도 소요될 수 있습니다)
+        </div>
+
+        <table class="table table-bordered bg-white mt-4" id="resultTable" style="display: none;">
+            <thead class="table-dark">
+                <tr>
+                    <th>취약점 이름</th>
+                    <th>대상 URL</th>
+                    <th>페이로드 / 정보</th>
+                    <th>매칭 단어 / 결과</th>
+                </tr>
+            </thead>
+            <tbody id="resultBody"></tbody>
+        </table>
+        
+        <div id="safeMsg" class="alert alert-success text-center mt-4" style="display: none;">
+            발견된 취약점이 없습니다!
+        </div>
+    </div>
+
+    <script>
+        // 꺾쇠 기호를 문자로 변환해주는 안전 장치 (XSS 페이로드 화면 깨짐 방지)
+        function escapeHtml(text) {
+            if (!text) return "";
+            return text.toString().replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        document.getElementById('scanBtn').addEventListener('click', function() {
+            const url = document.getElementById('targetUrl').value;
+            if (!url) {
+                alert("URL을 입력하세요!");
+                return;
+            }
+
+            // 스캔 버튼 누르면 로딩 띄우고 결과창 숨기기
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('resultTable').style.display = 'none';
+            document.getElementById('safeMsg').style.display = 'none';
+            document.getElementById('resultBody').innerHTML = '';
+
+            // 파이썬 백엔드로 URL 전송
+            fetch('/scan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: url })
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('loading').style.display = 'none';
+                
+                if (data.results && data.results.length > 0) {
+                    document.getElementById('resultTable').style.display = 'table';
+                    data.results.forEach(vuln => {
+                        // 결과 출력 시 escapeHtml 함수를 통과시켜 안전하게 표시
+                        document.getElementById('resultBody').innerHTML += `
+                            <tr>
+                                <td class="text-danger fw-bold">${escapeHtml(vuln.name)}</td>
+                                <td>${escapeHtml(vuln.url)}</td>
+                                <td><code>${escapeHtml(vuln.payload)}</code></td>
+                                <td><span class="badge bg-warning text-dark">${escapeHtml(vuln.word)}</span></td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    document.getElementById('safeMsg').style.display = 'block';
+                }
+            })
+            .catch(err => {
+                document.getElementById('loading').style.display = 'none';
+                alert("스캔 중 오류가 발생했습니다. 파이썬 터미널 창을 확인해주세요.");
+                console.error(err);
+            });
+        });
+    </script>
+</body>
+</html>

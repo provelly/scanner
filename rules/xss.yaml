@@ -1,0 +1,11 @@
+id: xss-vulnerability
+info:
+  name: Reflected XSS
+  severity: high
+http:
+  - payloads:
+      - "<script>alert('XSS')</script>"
+    matchers:
+      - type: word
+        words:
+          - "<script>alert('XSS')</script>"

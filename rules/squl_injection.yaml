@@ -1,0 +1,15 @@
+id: sql-injection
+info:
+  name: SQL Injection
+  severity: high
+http:
+  - payloads:
+      - "'"
+      - "''"
+      - "') OR 1=1--"
+    matchers:
+      - type: word
+        words:
+          - "you have an error in your sql syntax"
+          - "mysql_fetch_array()"
+          - "unclosed quotation mark"
