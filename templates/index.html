@@ -65,6 +65,12 @@
             .then(data => {
                 document.getElementById('loading').style.display = 'none';
                 
+                // ⭐️ [새로 추가된 핵심 로직] 파이썬에서 튕겨낸 에러 메시지(존재하지 않는 URL 등)가 있다면 경고창 띄우기
+                if (data.error) {
+                    alert("🚨 " + data.error);
+                    return; // 에러가 났으므로 아래쪽 표 그리는 작업은 여기서 즉시 중단합니다.
+                }
+                
                 if (data.results && data.results.length > 0) {
                     document.getElementById('resultTable').style.display = 'table';
                     data.results.forEach(vuln => {
