@@ -48,25 +48,29 @@ def scan_target(target_url):
                 if code_content and len(code_content.strip()) > 10: 
                     ai_analyzed = True
                     print(f"[*] AI 모델이 자바스크립트를 분석 중입니다... (길이: {len(code_content)}자)")
-                    is_vuln, prob = ai_scanner.analyze_snippet(code_content)
+                    
+                    # ⭐️ 수정된 부분: AI로부터 explanation(설명)까지 총 3개를 받아옵니다.
+                    is_vuln, prob, explanation = ai_scanner.analyze_snippet(code_content)
                     
                     found_vulns.append({
-                        'name': 'AI 자바스크립트 분석 (CodeBERT)',
+                        'name': '🤖 AI 지능형 분석 (CodeBERT)',
                         'url': target_url,
-                        'payload': f'스크립트 길이: {len(code_content)}자',
-                        'word': f'위험 확률: {prob}%'
+                        'payload': f'위험 확률: {prob}%',
+                        'word': f'📝 AI 진단: {explanation}' # ⭐️ 결과창에 AI의 상세 설명 출력
                     })
 
             if not ai_analyzed:
                 print("[*] 스크립트가 없어서 HTML 소스코드를 AI에게 분석시킵니다...")
                 html_snippet = res.text[:500] 
-                is_vuln, prob = ai_scanner.analyze_snippet(html_snippet)
+                
+                # ⭐️ 수정된 부분: HTML 구조 분석 시에도 explanation(설명)을 받아옵니다.
+                is_vuln, prob, explanation = ai_scanner.analyze_snippet(html_snippet)
                 
                 found_vulns.append({
-                    'name': 'AI 구조 분석 (CodeBERT)',
+                    'name': '🤖 AI 구조 분석 (HTML)',
                     'url': target_url,
-                    'payload': f'분석된 HTML 길이: {len(html_snippet)}자',
-                    'word': f'위험 확률: {prob}%'
+                    'payload': f'위험 확률: {prob}%',
+                    'word': f'📝 AI 진단: {explanation}' # ⭐️ 결과창에 AI의 상세 설명 출력
                 })
 
         # 2. [템플릿 기반] 입력 폼 크롤링 및 수집
